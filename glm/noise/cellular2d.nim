@@ -4,31 +4,12 @@
 # See LICENSE file for details.
 # https://github.com/stegu/webgl-noise
 
-import glm
-
-# Modulo 289 without a division (only multiplications)
-proc mod289(x: Vec3): Vec3 =
-  return x - floor(x * (1.0 / 289.0)) * 289.0;
-
-proc mod289(x: Vec2): Vec2 =
-  return x - floor(x * (1.0 / 289.0)) * 289.0;
-
-# Modulo 7 without a division
-proc mod7(x: Vec3): Vec3 =
-  return x - floor(x * (1.0 / 7.0)) * 7.0;
-
-# Permutation polynomial: (34x^2 + x) mod 289
-proc permute(x: Vec3): Vec3 =
-  return mod289((34.0 * x + 1.0) * x);
-
+include shared
 
 # Cellular noise, returning F1 and F2 in a vec2.
 # Standard 3x3 search window for good F1 and F2 values
 proc cellular*(P: Vec2): Vec2 =
-  const
-    K = 0.142857142857 # 1/7
-    Ko = 0.428571428571 # 3/7
-    jitter = 1.0 # Less gives more regular pattern
+  const jitter = 1.0 # Less gives more regular pattern
 
   var Pi: Vec2 = mod289(floor(P));
   var Pf: Vec2 = fract(P);
