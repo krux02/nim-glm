@@ -25,7 +25,7 @@ vec3 permute(vec3 x) {
 }
 ]#
 
-proc snoise(v: Vec2): float =
+proc snoise*(v: Vec2): float =
   
   const C: Vec4 = vec4(0.211324865405187,  # (3.0-sqrt(3.0))/6.0
                       0.366025403784439,  # 0.5*(sqrt(3.0)-1.0)

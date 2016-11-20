@@ -67,7 +67,7 @@
 # (If you run into problems with this, please let me know.)
 #
 
-include shared
+import shared
 
 #[
 # Modulo 289, optimizes to code without divisions
@@ -103,7 +103,7 @@ proc rgrad2(p: Vec2; rot: float): Vec2 =
 # The first component of the 3-element return vector is the noise value,
 # and the second and third components are the x and y partial derivatives.
 #
-proc psrdnoise(pos: Vec2; per: Vec2; rot: float): Vec3 =
+proc psrdnoise*(pos: Vec2; per: Vec2; rot: float): Vec3 =
   # Hack: offset y slightly to hide some rare artifacts
   pos.y += 0.01;
   # Skew to hexagonal grid
@@ -195,14 +195,14 @@ proc psrdnoise(pos: Vec2; per: Vec2; rot: float): Vec3 =
 # This function is implemented as a wrapper to "psrdnoise",
 # at the minimal cost of three extra additions.
 #
-proc psdnoise(pos: Vec2, per: Vec2): Vec3 =
+proc psdnoise*(pos: Vec2, per: Vec2): Vec3 =
   return psrdnoise(pos, per, 0.0);
 
 #
 # 2-D tiling simplex noise with rotating gradients,
 # but without the analytical derivative.
 #
-proc psrnoise(pos: Vec2, per: Vec2, rot: float): float =
+proc psrnoise*(pos: Vec2, per: Vec2, rot: float): float =
   # Offset y slightly to hide some rare artifacts
   pos.y += 0.001;
   # Skew to hexagonal grid
@@ -270,7 +270,7 @@ proc psrnoise(pos: Vec2, per: Vec2, rot: float): float =
 # This function is implemented as a wrapper to "psrnoise",
 # at the minimal cost of three extra additions.
 #
-proc psnoise(pos: Vec2, per: Vec2): float =
+proc psnoise*(pos: Vec2, per: Vec2): float =
   return psrnoise(pos, per, 0.0);
 
 
@@ -279,7 +279,7 @@ proc psnoise(pos: Vec2, per: Vec2): float =
 # The first component of the 3-element return vector is the noise value,
 # and the second and third components are the x and y partial derivatives.
 #
-proc srdnoise(pos: Vec2; rot: float): float =
+proc srdnoise*(pos: Vec2; rot: float): float =
   # Offset y slightly to hide some rare artifacts
   pos.y += 0.001;
   # Skew to hexagonal grid
@@ -373,14 +373,14 @@ proc srdnoise(pos: Vec2; rot: float): float =
 # This function is implemented as a wrapper to "srdnoise",
 # at the minimal cost of three extra additions.
 #
-proc sdnoise(pos: Vec2): Vec3 =
+proc sdnoise*(pos: Vec2): Vec3 =
   return srdnoise(pos, 0.0);
 
 #
 # 2-D non-tiling simplex noise with rotating gradients,
 # without the analytical derivative.
 #
-proc srnoise(pos: Vec2; rot: float): float =
+proc srnoise*(pos: Vec2; rot: float): float =
   # Offset y slightly to hide some rare artifacts
   pos.y += 0.001;
   # Skew to hexagonal grid
@@ -458,6 +458,6 @@ proc srnoise(pos: Vec2; rot: float): float =
 # with the other functions in the file.
 #
 
-proc snoise(pos: Vec2): float =
+proc snoise*(pos: Vec2): float =
   return srnoise(pos, 0.0);
 

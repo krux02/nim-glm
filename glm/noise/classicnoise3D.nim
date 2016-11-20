@@ -36,7 +36,7 @@ vec3 fade(vec3 t) {
 ]#
 
 # Classic Perlin noise
-proc cnoise(P: Vec3) : auto =
+proc cnoise*(P: Vec3) : SomeReal =
   var  Pi0: Vec3 = floor(P); # Integer part for indexing
   var  Pi1: Vec3 = Pi0 + vec3(1.0); # Integer part + 1
   Pi0 = mod289(Pi0);
@@ -105,7 +105,7 @@ proc cnoise(P: Vec3) : auto =
 
 
 # Classic Perlin noise, periodic variant
-proc pnoise(P: Vec3; rep: Vec3): float =
+proc pnoise*(P: Vec3; rep: Vec3): float =
   var  Pi0: Vec3 = mod(floor(P), rep); # Integer part, modulo period
   var  Pi1: Vec3 = mod(Pi0 + vec3(1.0), rep); # Integer part + 1, mod period
   Pi0 = mod289(Pi0);

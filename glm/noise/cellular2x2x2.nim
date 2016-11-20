@@ -11,30 +11,30 @@ include shared
 # at the expense of some pattern artifacts.
 # F2 is often wrong and has sharp discontinuities.
 # If you need a good F2, use the slower 3x3x3 version.
-proc cellular2x2x2*(P: Vec3): Vec2 =
+proc cellular2x2x2*[T](P: Vec3[T]): Vec2[T] =
   const jitter = 0.8 # smaller jitter gives less errors in F2
-  var Pi: Vec3 = mod289(floor(P));
-  var  Pf: Vec3 = fract(P);
-  var  Pfx: Vec4 = Pf.x + vec4(0.0, -1.0, 0.0, -1.0);
-  var  Pfy: Vec4 = Pf.y + vec4(0.0, 0.0, -1.0, -1.0);
-  var  p: Vec4 = permute(Pi.x + vec4(0.0, 1.0, 0.0, 1.0));
+  var Pi: Vec3[T] = mod289(floor(P));
+  var  Pf: Vec3[T] = fract(P);
+  var  Pfx: Vec4[T] = Pf.x + vec4(0.0, -1.0, 0.0, -1.0);
+  var  Pfy: Vec4[T] = Pf.y + vec4(0.0, 0.0, -1.0, -1.0);
+  var  p: Vec4[T] = permute(Pi.x + vec4(0.0, 1.0, 0.0, 1.0));
   p = permute(p + Pi.y + vec4(0.0, 0.0, 1.0, 1.0));
-  var  p1: Vec4 = permute(p + Pi.z); # z+0
-  var  p2: Vec4 = permute(p + Pi.z + vec4(1.0)); # z+1
-  var  ox1: Vec4 = fract(p1*K) - Ko;
-  var  oy1: Vec4 = mod7(floor(p1*K))*K - Ko;
-  var  oz1: Vec4 = floor(p1*K2)*Kz - Kzo; # p1 < 289 guaranteed
-  var  ox2: Vec4 = fract(p2*K) - Ko;
-  var  oy2: Vec4 = mod7(floor(p2*K))*K - Ko;
-  var  oz2: Vec4 = floor(p2*K2)*Kz - Kzo;
-  var  dx1: Vec4 = Pfx + jitter*ox1;
-  var  dy1: Vec4 = Pfy + jitter*oy1;
-  var  dz1: Vec4 = Pf.z + jitter*oz1;
-  var  dx2: Vec4 = Pfx + jitter*ox2;
-  var  dy2: Vec4 = Pfy + jitter*oy2;
-  var  dz2: Vec4 = Pf.z - 1.0 + jitter*oz2;
-  var  d1: Vec4 = dx1 * dx1 + dy1 * dy1 + dz1 * dz1; # z+0
-  var  d2: Vec4 = dx2 * dx2 + dy2 * dy2 + dz2 * dz2; # z+1
+  var  p1: Vec4[T] = permute(p + Pi.z); # z+0
+  var  p2: Vec4[T] = permute(p + Pi.z + vec4(1.0)); # z+1
+  var  ox1: Vec4[T] = fract(p1*K) - Ko;
+  var  oy1: Vec4[T] = mod7(floor(p1*K))*K - Ko;
+  var  oz1: Vec4[T] = floor(p1*K2)*Kz - Kzo; # p1 < 289 guaranteed
+  var  ox2: Vec4[T] = fract(p2*K) - Ko;
+  var  oy2: Vec4[T] = mod7(floor(p2*K))*K - Ko;
+  var  oz2: Vec4[T] = floor(p2*K2)*Kz - Kzo;
+  var  dx1: Vec4[T] = Pfx + jitter*ox1;
+  var  dy1: Vec4[T] = Pfy + jitter*oy1;
+  var  dz1: Vec4[T] = Pf.z + jitter*oz1;
+  var  dx2: Vec4[T] = Pfx + jitter*ox2;
+  var  dy2: Vec4[T] = Pfy + jitter*oy2;
+  var  dz2: Vec4[T] = Pf.z - 1.0 + jitter*oz2;
+  var  d1: Vec4[T] = dx1 * dx1 + dy1 * dy1 + dz1 * dz1; # z+0
+  var  d2: Vec4[T] = dx2 * dx2 + dy2 * dy2 + dz2 * dz2; # z+1
 
   # Sort out the two smallest distances (F1, F2)
   when false:

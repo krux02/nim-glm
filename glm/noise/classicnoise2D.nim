@@ -15,28 +15,28 @@
 include shared
 
 # Classic Perlin noise
-proc cnoise(P: Vec2): auto =
-  var Pi: Vec4 = floor(P.xyxy) + vec4(0.0, 0.0, 1.0, 1.0);
-  var Pf: Vec4 = fract(P.xyxy) - vec4(0.0, 0.0, 1.0, 1.0);
+proc cnoise*[T](P: Vec2[T]): T =
+  var Pi: Vec4[T] = floor(P.xyxy) + vec4(0.0, 0.0, 1.0, 1.0);
+  var Pf: Vec4[T] = fract(P.xyxy) - vec4(0.0, 0.0, 1.0, 1.0);
   Pi = mod289(Pi); # To avoid truncation effects in permutation
-  var ix: Vec4 = Pi.xzxz;
-  var iy: Vec4 = Pi.yyww;
-  var fx: Vec4 = Pf.xzxz;
-  var fy: Vec4 = Pf.yyww;
+  var ix: Vec4[T] = Pi.xzxz;
+  var iy: Vec4[T] = Pi.yyww;
+  var fx: Vec4[T] = Pf.xzxz;
+  var fy: Vec4[T] = Pf.yyww;
 
-  var i: Vec4 = permute(permute(ix) + iy);
+  var i: Vec4[T] = permute(permute(ix) + iy);
 
-  var gx: Vec4 = fract(i * (1.0 / 41.0)) * 2.0 - 1.0 ;
-  var gy: Vec4 = abs(gx) - 0.5 ;
-  var tx: Vec4 = floor(gx + 0.5);
+  var gx: Vec4[T] = fract(i * (1.0 / 41.0)) * 2.0 - 1.0 ;
+  var gy: Vec4[T] = abs(gx) - 0.5 ;
+  var tx: Vec4[T] = floor(gx + 0.5);
   gx = gx - tx;
 
-  var g00: Vec2 = vec2(gx.x,gy.x);
-  var g10: Vec2 = vec2(gx.y,gy.y);
-  var g01: Vec2 = vec2(gx.z,gy.z);
-  var g11: Vec2 = vec2(gx.w,gy.w);
+  var g00: Vec2[T] = vec2(gx.x,gy.x);
+  var g10: Vec2[T] = vec2(gx.y,gy.y);
+  var g01: Vec2[T] = vec2(gx.z,gy.z);
+  var g11: Vec2[T] = vec2(gx.w,gy.w);
 
-  var norm: Vec4 = taylorInvSqrt(vec4(dot(g00, g00), dot(g01, g01), dot(g10, g10), dot(g11, g11)));
+  var norm: Vec4[T] = taylorInvSqrt(vec4(dot(g00, g00), dot(g01, g01), dot(g10, g10), dot(g11, g11)));
   g00 *= norm.x;  
   g01 *= norm.y;  
   g10 *= norm.z;  
@@ -47,36 +47,36 @@ proc cnoise(P: Vec2): auto =
   var n01 = dot(g01, vec2(fx.z, fy.z));
   var n11 = dot(g11, vec2(fx.w, fy.w));
 
-  var fade_xy: Vec2 = fade(Pf.xy);
-  var n_x: Vec2 = mix(vec2(n00, n01), vec2(n10, n11), fade_xy.x);
+  var fade_xy: Vec2[T] = fade(Pf.xy);
+  var n_x: Vec2[T] = mix(vec2(n00, n01), vec2(n10, n11), fade_xy.x);
   var n_xy = mix(n_x.x, n_x.y, fade_xy.y);
   return 2.3 * n_xy;
 
 
 # Classic Perlin noise, periodic variant
-proc pnoise(P,rep: Vec2): auto =
-  var Pi: Vec4 = floor(P.xyxy) + vec4(0.0, 0.0, 1.0, 1.0);
-  var Pf: Vec4 = fract(P.xyxy) - vec4(0.0, 0.0, 1.0, 1.0);
+proc pnoise*[T](P: Vec2[T]; rep: Vec2[T]): T =
+  var Pi: Vec4[T] = floor(P.xyxy) + vec4(0.0, 0.0, 1.0, 1.0);
+  var Pf: Vec4[T] = fract(P.xyxy) - vec4(0.0, 0.0, 1.0, 1.0);
   Pi = mod(Pi, rep.xyxy); # To create noise with explicit period
   Pi = mod289(Pi);        # To avoid truncation effects in permutation
-  var ix: Vec4 = Pi.xzxz;
-  var iy: Vec4 = Pi.yyww;
-  var fx: Vec4 = Pf.xzxz;
-  var fy: Vec4 = Pf.yyww;
+  var ix: Vec4[T] = Pi.xzxz;
+  var iy: Vec4[T] = Pi.yyww;
+  var fx: Vec4[T] = Pf.xzxz;
+  var fy: Vec4[T] = Pf.yyww;
 
-  var i: Vec4 = permute(permute(ix) + iy);
+  var i: Vec4[T] = permute(permute(ix) + iy);
 
-  var gx: Vec4 = fract(i * (1.0 / 41.0)) * 2.0 - 1.0 ;
-  var gy: Vec4 = abs(gx) - 0.5 ;
-  var tx: Vec4 = floor(gx + 0.5);
+  var gx: Vec4[T] = fract(i * (1.0 / 41.0)) * 2.0 - 1.0 ;
+  var gy: Vec4[T] = abs(gx) - 0.5 ;
+  var tx: Vec4[T] = floor(gx + 0.5);
   gx = gx - tx;
 
-  var g00: Vec2 = vec2(gx.x,gy.x);
-  var g10: Vec2 = vec2(gx.y,gy.y);
-  var g01: Vec2 = vec2(gx.z,gy.z);
-  var g11: Vec2 = vec2(gx.w,gy.w);
+  var g00: Vec2[T] = vec2(gx.x,gy.x);
+  var g10: Vec2[T] = vec2(gx.y,gy.y);
+  var g01: Vec2[T] = vec2(gx.z,gy.z);
+  var g11: Vec2[T] = vec2(gx.w,gy.w);
 
-  var norm: Vec4 = taylorInvSqrt(vec4(dot(g00, g00), dot(g01, g01), dot(g10, g10), dot(g11, g11)));
+  var norm: Vec4[T] = taylorInvSqrt(vec4(dot(g00, g00), dot(g01, g01), dot(g10, g10), dot(g11, g11)));
   g00 *= norm.x;  
   g01 *= norm.y;  
   g10 *= norm.z;  
@@ -87,8 +87,8 @@ proc pnoise(P,rep: Vec2): auto =
   var n01 = dot(g01, vec2(fx.z, fy.z));
   var n11 = dot(g11, vec2(fx.w, fy.w));
 
-  var fade_xy: Vec2 = fade(Pf.xy);
-  var n_x: Vec2 = mix(vec2(n00, n01), vec2(n10, n11), fade_xy.x);
+  var fade_xy: Vec2[T] = fade(Pf.xy);
+  var n_x: Vec2[T] = mix(vec2(n00, n01), vec2(n10, n11), fade_xy.x);
   var n_xy = mix(n_x.x, n_x.y, fade_xy.y);
   return 2.3 * n_xy;
 

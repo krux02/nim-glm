@@ -8,34 +8,34 @@ include shared
 
 # Cellular noise, returning F1 and F2 in a vec2.
 # Standard 3x3 search window for good F1 and F2 values
-proc cellular*(P: Vec2): Vec2 =
+proc cellular*[T](P: Vec2[T]): Vec2[T] =
   const jitter = 1.0 # Less gives more regular pattern
 
-  var Pi: Vec2 = mod289(floor(P));
-  var Pf: Vec2 = fract(P);
-  var oi: Vec3 = vec3(-1.0, 0.0, 1.0);
-  var off: Vec3 = vec3(-0.5, 0.5, 1.5);
-  var px: Vec3 = permute(Pi.x + oi);
-  var p: Vec3 = permute(px.x + Pi.y + oi); # p11, p12, p13
-  var ox: Vec3 = fract(p*K) - Ko;
-  var oy: Vec3 = mod7(floor(p*K))*K - Ko;
-  var dx: Vec3 = Pf.x + 0.5 + jitter*ox;
-  var dy: Vec3 = Pf.y - off + jitter*oy;
-  var d1: Vec3 = dx * dx + dy * dy; # d11, d12 and d13, squared
+  var Pi: Vec2[T] = mod289(floor(P));
+  var Pf: Vec2[T] = fract(P);
+  var oi: Vec3[T] = vec3(-1.0, 0.0, 1.0);
+  var off: Vec3[T] = vec3(-0.5, 0.5, 1.5);
+  var px: Vec3[T] = permute(Pi.x + oi);
+  var p: Vec3[T] = permute(px.x + Pi.y + oi); # p11, p12, p13
+  var ox: Vec3[T] = fract(p*K) - Ko;
+  var oy: Vec3[T] = mod7(floor(p*K))*K - Ko;
+  var dx: Vec3[T] = Pf.x + 0.5 + jitter*ox;
+  var dy: Vec3[T] = Pf.y - off + jitter*oy;
+  var d1: Vec3[T] = dx * dx + dy * dy; # d11, d12 and d13, squared
   p = permute(px.y + Pi.y + oi); # p21, p22, p23
   ox = fract(p*K) - Ko;
   oy = mod7(floor(p*K))*K - Ko;
   dx = Pf.x - 0.5 + jitter*ox;
   dy = Pf.y - off + jitter*oy;
-  var d2: Vec3 = dx * dx + dy * dy; # d21, d22 and d23, squared
+  var d2: Vec3[T] = dx * dx + dy * dy; # d21, d22 and d23, squared
   p = permute(px.z + Pi.y + oi); # p31, p32, p33
   ox = fract(p*K) - Ko;
   oy = mod7(floor(p*K))*K - Ko;
   dx = Pf.x - 1.5 + jitter*ox;
   dy = Pf.y - off + jitter*oy;
-  var d3: Vec3 = dx * dx + dy * dy; # d31, d32 and d33, squared
+  var d3: Vec3[T] = dx * dx + dy * dy; # d31, d32 and d33, squared
   # Sort out the two smallest distances (F1, F2)
-  var d1a: Vec3 = min(d1, d2);
+  var d1a: Vec3[T] = min(d1, d2);
   d2 = max(d1, d2); # Swap to keep candidates for F2
   d2 = min(d2, d3); # neither F1 nor F2 are now in d3
   d1 = min(d1a, d2); # F1 is now in d1

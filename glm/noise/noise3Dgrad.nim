@@ -31,7 +31,7 @@ vec4 taylorInvSqrt(vec4 r)
 }
 ]#
 
-proc snoise(v: Vec3; gradient: var Vec3): float =
+proc snoise*(v: Vec3; gradient: var Vec3): float =
   const C: Vec2 = vec2(1.0/6.0, 1.0/3.0) ;
   const D: Vec4 = vec4(0.0, 0.5, 1.0, 2.0);
 
