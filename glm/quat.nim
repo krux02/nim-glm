@@ -165,14 +165,3 @@ proc quatd*(x,y,z,w : float64) : Quatd {.inline.} =  Quatd(arr: [x,y,z,w])
 proc quatd*(axis: Vec3d; angle: float64): Quatd = quat[float64](axis,angle)
 proc quatd*(mat: Mat3d): Quatd = quat[float64](mat)
 
-  
-#[
-proc frustum*[T](left, right, bottom, top, near, far: T): Mat4[T] =
-  result[0][0] =       (2*near)/(right-left)
-  result[1][1] =       (2*near)/(top-bottom)
-  result[2][2] =     (far+near)/(near-far)
-  result[2][0] =   (right+left)/(right-left)
-  result[2][1] =   (top+bottom)/(top-bottom)
-  result[2][3] = -1
-  result[3][2] =   (2*far*near)/(near-far)
-]#
