@@ -2,6 +2,11 @@ import macros, math
 
 export math.Pi
 
+import simd/simdAvx
+import simd/simdAvx512
+import simd/simdX86Types
+import simd/simdSse
+
 # this is a dirty hack to have integer division behave like in C/C++/glsl etc.
 # don't export functions, maybe disable
 template `/`(a,b: int32): int32 = a div b
@@ -14,7 +19,16 @@ proc `/=`(a: var SomeInteger; b: SomeInteger): void =
 type
   VectorElementType = SomeNumber | bool
   Vec*[N : static[int], T: VectorElementType] = object
-    arr*: array[N, T]
+    when T is float32:
+      when N == 2:
+        simd: m64
+      elif N <= 4:
+        simd: m128
+    when T is float64:
+      when N == 2:
+        simd: m128d
+      elif N <= 4:
+        simd: m256d
 
 type
   Vec4*[T: VectorElementType] = Vec[4,T]
@@ -165,7 +179,7 @@ proc vec4*[T](x:T,v:Vec2[T],w:T) : Vec4[T] {.inline.} = Vec4[T](arr: [  x, v.x, 
 proc vec4*[T](x,y:T,v:Vec2[T])   : Vec4[T] {.inline.} = Vec4[T](arr: [  x,   y, v.x, v.y])
 proc vec4*[T](x:T)               : Vec4[T] {.inline.} = Vec4[T](arr: [  x,   x,   x,   x])
 
-proc vec3*[T](x,y,z: T)      : Vec3[T] {.inline.} = Vec3[T](arr: [  x,   y,   z])
+proc vec3*[T](x,y,z: T)      : Vec3[T] {.inline.} = Vec3[T](arr:  [  x,   y,   z])
 proc vec3*[T](v:Vec2[T],z:T) : Vec3[T] {.inline.} = Vec3[T](arr: [v.x, v.y,   z])
 proc vec3*[T](x:T,v:Vec2[T]) : Vec3[T] {.inline.} = Vec3[T](arr: [  x, v.x, v.y])
 proc vec3*[T](x:T)           : Vec3[T] {.inline.} = Vec3[T](arr: [  x,   x,   x])
@@ -263,6 +277,7 @@ proc swizzleMethods(indices: varargs[int], chars: string): seq[NimNode] {.compil
         v.arr[`lit`] = val
     )
 
+
 macro genSwizzleOps(chars: static[string]): untyped =
   result = newStmtList()
   for i in 0 .. 3:
@@ -274,9 +289,63 @@ macro genSwizzleOps(chars: static[string]): untyped =
         for m in 0 .. 3:
           result.add swizzleMethods(i,j,k,m, chars)
 
-genSwizzleOps("xyzw")
-genSwizzleOps("rgba")
-genSwizzleOps("stpq")
+
+# genSwizzleOps("xyzw")
+# genSwizzleOps("rgba")
+# genSwizzleOps("stpq")
+
+# mm_permute_ps
+
+# macro imm8convert(a,b,c,d: static[int]): int =
+#   let a = (a and 3) shl 0
+#   let b = (b and 3) shl 2
+#   let c = (c and 3) shl 4
+#   let d = (d and 3) shl 6
+#   result = newLit(a or b or c or d)
+
+
+
+proc x*(v: Vec2f): float32 {.inline.} =
+  cast[float32](mm_extract_ps(v.simd, 0))
+
+proc `x=`*(v: var Vec2f; val: float32): void {.inline.} =
+  var arr: array[2, float32] = [val,0]
+  v.simd = mm_mask_load_ps(v.simd, cast[mmask8](0b0001), arr.addr)
+
+proc y*(v: Vec2f): float32 {.inline.} =
+  cast[float32](mm_extract_ps(v.simd, 1))
+
+proc `y=`*(v: var Vec2f; val: float32): void {.inline.} =
+  var arr: array[2, float32] = [0f,val,0,0]
+  v.simd = mm_mask_load_ps(v.simd, cast[mmask8](0b0010), arr.addr)
+
+proc x*(v: Vec4f | Vec3f): float32 {.inline.} =
+  cast[float32](mm_extract_ps(v.simd, 0))
+
+proc `x=`*(v: var Vec4f | Vec3f; val: float32): void {.inline.} =
+  var arr: array[4, float32] = [val,0,0,0]
+  v.simd = mm_mask_load_ps(v.simd, cast[mmask8](0b0001), arr.addr)
+
+proc y*(v: Vec4f | Vec3f): float32 {.inline.} =
+  cast[float32](mm_extract_ps(v.simd, 1))
+
+proc `y=`*(v: var Vec4f | Vec3f; val: float32): void {.inline.} =
+  var arr: array[4, float32] = [0f,val,0,0]
+  v.simd = mm_mask_load_ps(v.simd, cast[mmask8](0b0010), arr.addr)
+
+proc z*(v: Vec4f | Vec3f): float32 {.inline.} =
+  cast[float32](mm_extract_ps(v.simd, 2))
+
+proc `z=`*(v: var Vec4f | Vec3f; val: float32): void {.inline.} =
+  var arr: array[4, float32] = [0f,0,val,0]
+  v.simd = mm_mask_load_ps(v.simd, cast[mmask8](0b0100), arr.addr)
+
+proc w*(v: Vec4f): float32 {.inline.} =
+  cast[float32](mm_extract_ps(v.simd, 3))
+
+proc `w=`*(v: var Vec4f; val: float32): void {.inline.} =
+  var arr: array[4, float32] = [0f,0,0,val]
+  v.simd = mm_mask_load_ps(v.simd, cast[mmask8](0b1000), arr.addr)
 
 proc caddr*[N,T](v:var Vec[N,T]): ptr T {.inline.}=
   ## Address getter to pass vector to native-C openGL functions as pointers
@@ -425,8 +494,6 @@ proc modulo*[N: static[int]; T: SomeReal](x: Vec[N,T]; y: T): Vec[N,T] =
   ## `modulo` returns the value of x modulo y. This is computed as x - y * floor(x/y).
   x - y * floor(x / y)
 
-{.deprecated: [fmod: modulo].}
-
 proc sign*[T](x: T): T =
   T(x > 0) - T(x < 0)
 
@@ -512,14 +579,16 @@ proc refract*[N,T](i,n: Vec[N,T]; eta: T): Vec[N,T] =
 type
   Vec4u8* = Vec[4, uint8]
 
-proc vec4f*(x,y,z,w:float32)             : Vec4f {.inline.} = Vec4f(arr: [  x,   y,   z,   w])
-proc vec4f*(v:Vec3f,w:float32)           : Vec4f {.inline.} = Vec4f(arr: [v.x, v.y, v.z,   w])
-proc vec4f*(x:float32,v:Vec3f)           : Vec4f {.inline.} = Vec4f(arr: [  x, v.x, v.y, v.z])
-proc vec4f*(a,b:Vec2f)                   : Vec4f {.inline.} = Vec4f(arr: [a.x, a.y, b.x, b.y])
-proc vec4f*(v:Vec2f,z,w:float32)         : Vec4f {.inline.} = Vec4f(arr: [v.x, v.y,   z,   w])
-proc vec4f*(x:float32,v:Vec2f,w:float32) : Vec4f {.inline.} = Vec4f(arr: [  x, v.x, v.y,   w])
-proc vec4f*(x,y:float32,v:Vec2f)         : Vec4f {.inline.} = Vec4f(arr: [  x,   y, v.x, v.y])
-proc vec4f*(x:float32)                   : Vec4f {.inline.} = Vec4f(arr: [  x,   x,   x,   x])
+
+template vec4f*(x,y,z,w:float32): Vec4f = Vec4f(simd: mm_set_ps(w,z,y,x))
+
+proc vec4f*(v:Vec3f,w:float32)           : Vec4f {.inline.} = vec4f(v.x, v.y, v.z, w)
+proc vec4f*(x:float32,v:Vec3f)           : Vec4f {.inline.} = vec4f(x, v.x, v.y, v.z)
+proc vec4f*(a,b:Vec2f)                   : Vec4f {.inline.} = vec4f(a.x, a.y, b.x, b.y)
+proc vec4f*(v:Vec2f,z,w:float32)         : Vec4f {.inline.} = vec4f(v.x, v.y,   z,   w)
+proc vec4f*(x:float32,v:Vec2f,w:float32) : Vec4f {.inline.} = vec4f(  x, v.x, v.y,   w)
+proc vec4f*(x,y:float32,v:Vec2f)         : Vec4f {.inline.} = vec4f(  x,   y, v.x, v.y)
+proc vec4f*(x:float32)                   : Vec4f {.inline.} = vec4f(  x,   x,   x,   x)
 
 proc vec3f*(x,y,z:   float32)  : Vec3f {.inline.} = Vec3f(arr: [  x,   y,   z])
 proc vec3f*(v:Vec2f,z:float32) : Vec3f {.inline.} = Vec3f(arr: [v.x, v.y,   z])
@@ -529,7 +598,7 @@ proc vec3f*(x:float32)         : Vec3f {.inline.} = Vec3f(arr: [  x,   x,   x])
 proc vec2f*(x,y:float32) : Vec2f {.inline.} = Vec2f(arr: [x,y])
 proc vec2f*(x:float32)   : Vec2f {.inline.} = Vec2f(arr: [x,x])
 
-proc vec4f*(a:array[0..3, float32]) : Vec4f {.inline.} = Vec4f(arr: [a[0], a[1], a[2], a[3]])
+proc vec4f*(a:array[0..3, float32]) : Vec4f {.inline.} = vec4f(a[0], a[1], a[2], a[3]])
 proc vec3f*(a:array[0..2, float32]) : Vec3f {.inline.} = Vec3f(arr: [a[0], a[1], a[2]])
 proc vec2f*(a:array[0..1, float32]) : Vec2f {.inline.} = Vec2f(arr: [a[0], a[1]])
 
